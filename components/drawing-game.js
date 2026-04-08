@@ -1,0 +1,255 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+const CANVAS_WIDTH = 960;
+const CANVAS_HEIGHT = 640;
+const DEFAULT_COLOR = "#202020";
+const ERASER_COLOR = "#fffefb";
+
+function formatTime(value) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  }).format(new Date(value));
+}
+
+export default function DrawingGame() {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const drawingRef = useRef(false);
+  const lastPointRef = useRef(null);
+
+  const [brushColor, setBrushColor] = useState(DEFAULT_COLOR);
+  const [brushSize, setBrushSize] = useState(6);
+  const [guess, setGuess] = useState("还没有猜测结果");
+  const [reasoning, setReasoning] = useState("先画点什么，再让 AI 来猜。");
+  const [attempts, setAttempts] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    context.fillStyle = "#fffefb";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.lineCap = "round";
+    context.lineJoin = "round";
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const resize = () => {
+      const ratio = CANVAS_WIDTH / CANVAS_HEIGHT;
+      const maxWidth = containerRef.current?.clientWidth ?? CANVAS_WIDTH;
+      canvas.style.height = `${maxWidth / ratio}px`;
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  const drawSegment = (from, to) => {
+    const context = canvasRef.current.getContext("2d");
+    context.strokeStyle = brushColor;
+    context.lineWidth = brushSize;
+    context.beginPath();
+    context.moveTo(from.x, from.y);
+    context.lineTo(to.x, to.y);
+    context.stroke();
+  };
+
+  const getCanvasPoint = (event) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY
+    };
+  };
+
+  const handlePointerDown = (event) => {
+    event.preventDefault();
+    const point = getCanvasPoint(event);
+    drawingRef.current = true;
+    lastPointRef.current = point;
+    drawSegment(point, point);
+  };
+
+  const handlePointerMove = (event) => {
+    if (!drawingRef.current || !lastPointRef.current) {
+      return;
+    }
+
+    const point = getCanvasPoint(event);
+    drawSegment(lastPointRef.current, point);
+    lastPointRef.current = point;
+  };
+
+  const handlePointerUp = () => {
+    drawingRef.current = false;
+    lastPointRef.current = null;
+  };
+
+  const clearCanvas = () => {
+    const context = canvasRef.current.getContext("2d");
+    context.fillStyle = "#fffefb";
+    context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    setGuess("还没有猜测结果");
+    setReasoning("画面已清空，可以重新开始。");
+    setError("");
+  };
+
+  const useEraser = () => {
+    setBrushColor(ERASER_COLOR);
+  };
+
+  const usePen = () => {
+    setBrushColor(DEFAULT_COLOR);
+  };
+
+  const submitGuess = async () => {
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const imageDataUrl = canvasRef.current.toDataURL("image/png");
+      const response = await fetch("/api/guess", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ imageDataUrl })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "猜测失败");
+      }
+
+      setGuess(result.guess);
+      setReasoning(result.reasoning);
+      setAttempts((value) => value + 1);
+      setHistory((items) => [
+        {
+          id: crypto.randomUUID(),
+          guess: result.guess,
+          reasoning: result.reasoning,
+          createdAt: new Date().toISOString()
+        },
+        ...items
+      ].slice(0, 6));
+    } catch (submissionError) {
+      setError(submissionError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <section className="game-grid">
+      <div className="panel canvas-panel">
+        <div className="toolbar">
+          <div className="tool-row">
+            <button className="tool-chip" type="button" onClick={usePen}>
+              画笔
+            </button>
+            <button className="tool-chip" type="button" onClick={useEraser}>
+              橡皮擦
+            </button>
+            <label className="tool-chip">
+              笔触 {brushSize}
+              <input
+                aria-label="笔触大小"
+                type="range"
+                min="2"
+                max="36"
+                value={brushSize}
+                onChange={(event) => setBrushSize(Number(event.target.value))}
+              />
+            </label>
+          </div>
+          <div className="tool-row">
+            <button className="ghost-button" type="button" onClick={clearCanvas}>
+              清空
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={submitGuess}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Gemini 猜测中..." : "让 AI 猜"}
+            </button>
+          </div>
+        </div>
+
+        <div className="canvas-wrap" ref={containerRef}>
+          <canvas
+            ref={canvasRef}
+            className="drawing-canvas"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          />
+        </div>
+      </div>
+
+      <aside className="panel side-panel">
+        <div className="status-card">
+          <h2>当前猜测</h2>
+          <div className="guess-text">{guess}</div>
+          <div className="muted">{reasoning}</div>
+        </div>
+
+        {error ? <div className="error-box">{error}</div> : null}
+
+        <div className="status-card">
+          <h3>本局状态</h3>
+          <div className="meta-list">
+            <div className="meta-item">
+              <span className="muted">累计猜测次数</span>
+              <strong>{attempts}</strong>
+            </div>
+            <div className="meta-item">
+              <span className="muted">识别模型</span>
+              <strong>Gemini REST API</strong>
+            </div>
+            <div className="meta-item">
+              <span className="muted">调用位置</span>
+              <strong>Next.js 后台</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="status-card">
+          <h4>最近记录</h4>
+          <div className="history-list">
+            {history.length === 0 ? (
+              <div className="muted">还没有记录。</div>
+            ) : (
+              history.map((item) => (
+                <div key={item.id} className="history-item">
+                  <strong>{item.guess}</strong>
+                  <div className="muted">{item.reasoning}</div>
+                  <div className="muted">{formatTime(item.createdAt)}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </aside>
+    </section>
+  );
+}
