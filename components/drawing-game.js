@@ -7,6 +7,10 @@ const CANVAS_HEIGHT = 640;
 const DEFAULT_COLOR = "#202020";
 const ERASER_COLOR = "#fffefb";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+const baseUrl = isProduction ? "./" : "/";
+
 function formatTime(value) {
   return new Intl.DateTimeFormat("zh-CN", {
     hour: "2-digit",
@@ -127,12 +131,12 @@ export default function DrawingGame() {
 
     try {
       const imageDataUrl = canvasRef.current.toDataURL("image/png");
-      const response = await fetch("/api/guess", {
+      const response = await fetch(`${baseUrl}api/guess`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ imageDataUrl })
+        body: JSON.stringify({ imageDataUrl }),
       });
 
       const result = await response.json();
