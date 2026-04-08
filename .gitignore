@@ -9,7 +9,9 @@ mock/apis/0-swagger
 static/uipath.json
 .next
 
+
 # local env files
+.env
 .env.local
 .env.*.local
 
