@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-4. 打开 `http://localhost:3000`
+4. 打开 `http://localhost:3003`
 
 ## 环境变量
 
