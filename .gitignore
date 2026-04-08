@@ -3,9 +3,6 @@ node_modules
 dist
 build
 yarn.lock
-mock/apis/base
-mock/apis/biz
-mock/apis/0-swagger
 static/uipath.json
 .next
 
