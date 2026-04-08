@@ -117,6 +117,10 @@ export default function DrawingGame() {
     setBrushColor(DEFAULT_COLOR);
   };
 
+  const randomNumber = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
   const submitGuess = async () => {
     setIsSubmitting(true);
     setError("");
@@ -142,7 +146,7 @@ export default function DrawingGame() {
       setAttempts((value) => value + 1);
       setHistory((items) => [
         {
-          id: crypto.randomUUID(),
+          id: `${Date.now()}-${randomNumber(1000, 9999)}`,
           guess: result.guess,
           reasoning: result.reasoning,
           createdAt: new Date().toISOString()
