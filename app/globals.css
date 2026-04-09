@@ -112,14 +112,32 @@ button {
   transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
+
 .tool-chip {
   background: #fff3e7;
   color: var(--text);
   border-color: rgba(215, 100, 63, 0.14);
 }
 
-.tool-chip input[type="range"] {
-  accent-color: var(--accent);
+.tool-chip select {
+  margin-left: 8px;
+  padding: 4px 8px;
+  border: 1px solid rgba(31, 26, 22, 0.12);
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+
+.tool-chip select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.tool-chip select:hover {
+  border-color: rgba(215, 100, 63, 0.3);
 }
 
 .tool-chip.description-field {
@@ -174,6 +192,7 @@ button {
   border: 1px solid rgba(31, 26, 22, 0.1);
   border-radius: 24px;
   overflow: hidden;
+  margin-bottom: 10px;
 }
 
 .drawing-canvas {
@@ -265,6 +284,9 @@ button {
   .tool-row .primary-button {
     width: 100%;
   }
+  .inline-button {
+    width: 46% !important;
+  }
 
   .tool-row .tool-chip {
     justify-content: space-between;
@@ -272,6 +294,14 @@ button {
 
   .tool-chip.description-field {
     min-width: 100%;
+  }
+
+  .tool-chip select {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 16px; /* Prevent zoom on iOS */
   }
 
   .page-shell {

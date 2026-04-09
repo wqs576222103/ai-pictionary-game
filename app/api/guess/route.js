@@ -3,7 +3,7 @@ import { guessDrawingWithAI } from "../../../lib/ai-use";
 
 export async function POST(request) {
   try {
-    const { imageDataUrl, description } = await request.json();
+    const { imageDataUrl, description, model } = await request.json();
 
     if (!imageDataUrl || typeof imageDataUrl !== "string") {
       return NextResponse.json(
@@ -13,7 +13,8 @@ export async function POST(request) {
     }
 
     const detail = typeof description === "string" ? description.trim() : "";
-    const result = await guessDrawingWithAI(imageDataUrl, detail);
+    const selectedModel = typeof model === "string" ? model : "Qwen/Qwen3-VL-8B-Instruct";
+    const result = await guessDrawingWithAI(imageDataUrl, detail, selectedModel);
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(

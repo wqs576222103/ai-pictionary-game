@@ -34,6 +34,7 @@ export default function DrawingGame() {
   const [history, setHistory] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [selectedModel, setSelectedModel] = useState("Qwen/Qwen3-VL-8B-Instruct");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -137,7 +138,7 @@ export default function DrawingGame() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ imageDataUrl, description: description.trim() }),
+        body: JSON.stringify({ imageDataUrl, description: description.trim(), model: selectedModel }),
       });
 
       const result = await response.json();
@@ -169,12 +170,37 @@ export default function DrawingGame() {
   return (
     <section className="game-grid">
       <div className="panel canvas-panel">
+        <div className="tool-row" style={{marginBottom: 10, justifyContent: "flex-end"}}>
+          <button className="ghost-button inline-button" type="button" onClick={clearCanvas}>
+            清空
+          </button>
+          <button
+            className="primary-button inline-button"
+            type="button"
+            onClick={submitGuess}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "AI 猜测中..." : "让 AI 猜"}
+          </button>
+        </div>
+        <div className="canvas-wrap" ref={containerRef}>
+          <canvas
+            ref={canvasRef}
+            className="drawing-canvas"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          />
+        </div>
+
         <div className="toolbar">
+
           <div className="tool-row">
-            <button className="tool-chip" type="button" onClick={usePen}>
+            <button className="tool-chip inline-button" type="button" onClick={usePen}>
               画笔
             </button>
-            <button className="tool-chip" type="button" onClick={useEraser}>
+            <button className="tool-chip inline-button" type="button" onClick={useEraser}>
               橡皮擦
             </button>
             <label className="tool-chip">
@@ -187,6 +213,17 @@ export default function DrawingGame() {
                 value={brushSize}
                 onChange={(event) => setBrushSize(Number(event.target.value))}
               />
+            </label>
+            <label className="tool-chip">
+              识别模型
+              <select
+                value={selectedModel}
+                onChange={(event) => setSelectedModel(event.target.value)}
+              >
+                <option value="Qwen/Qwen3-VL-235B-A22B-Instruct">Qwen/Qwen3-VL-235B-A22B-Instruct</option>
+                <option value="moonshotai/Kimi-K2.5">moonshotai/Kimi-K2.5</option>
+                <option value="Qwen/Qwen3-VL-8B-Instruct">Qwen/Qwen3-VL-8B-Instruct</option>
+              </select>
             </label>
           </div>
           <div className="tool-row">
@@ -201,31 +238,10 @@ export default function DrawingGame() {
               />
             </label>
           </div>
-          <div className="tool-row">
-            <button className="ghost-button" type="button" onClick={clearCanvas}>
-              清空
-            </button>
-            <button
-              className="primary-button"
-              type="button"
-              onClick={submitGuess}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "AI 猜测中..." : "让 AI 猜"}
-            </button>
-          </div>
+
         </div>
 
-        <div className="canvas-wrap" ref={containerRef}>
-          <canvas
-            ref={canvasRef}
-            className="drawing-canvas"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-          />
-        </div>
+
       </div>
 
       <aside className="panel side-panel">
@@ -243,10 +259,6 @@ export default function DrawingGame() {
             <div className="meta-item">
               <span className="muted">累计猜测次数</span>
               <strong>{attempts}</strong>
-            </div>
-            <div className="meta-item">
-              <span className="muted">识别模型</span>
-              <strong>AI REST API</strong>
             </div>
           </div>
         </div>
