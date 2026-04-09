@@ -122,6 +122,32 @@ button {
   accent-color: var(--accent);
 }
 
+.tool-chip.description-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #fff8f1;
+  border-color: rgba(215, 100, 63, 0.16);
+  padding: 14px 16px 12px;
+  border-radius: 24px;
+  min-width: 280px;
+  max-width: 100%;
+}
+
+.tool-chip.description-field textarea {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 72px;
+  max-height: 140px;
+  padding: 10px 12px;
+  border: 1px solid rgba(31, 26, 22, 0.12);
+  border-radius: 16px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
 .primary-button {
   background: var(--accent);
   color: white;
@@ -222,6 +248,30 @@ button {
 @media (max-width: 960px) {
   .game-grid {
     grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tool-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .tool-row .tool-chip,
+  .tool-row .ghost-button,
+  .tool-row .primary-button {
+    width: 100%;
+  }
+
+  .tool-row .tool-chip {
+    justify-content: space-between;
+  }
+
+  .tool-chip.description-field {
+    min-width: 100%;
   }
 
   .page-shell {

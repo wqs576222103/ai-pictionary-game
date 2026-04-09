@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { guessDrawingWithGemini } from "../../../lib/gemini";
+import { guessDrawingWithAI } from "../../../lib/ai-use";
 
 export async function POST(request) {
   try {
-    const { imageDataUrl } = await request.json();
+    const { imageDataUrl, description } = await request.json();
 
     if (!imageDataUrl || typeof imageDataUrl !== "string") {
       return NextResponse.json(
@@ -12,7 +12,8 @@ export async function POST(request) {
       );
     }
 
-    const result = await guessDrawingWithGemini(imageDataUrl);
+    const detail = typeof description === "string" ? description.trim() : "";
+    const result = await guessDrawingWithAI(imageDataUrl, detail);
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(

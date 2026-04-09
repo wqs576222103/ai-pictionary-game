@@ -30,6 +30,7 @@ export default function DrawingGame() {
   const [guess, setGuess] = useState("还没有猜测结果");
   const [reasoning, setReasoning] = useState("先画点什么，再让 AI 来猜。");
   const [attempts, setAttempts] = useState(0);
+  const [description, setDescription] = useState("");
   const [history, setHistory] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -136,7 +137,7 @@ export default function DrawingGame() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ imageDataUrl }),
+        body: JSON.stringify({ imageDataUrl, description: description.trim() }),
       });
 
       const result = await response.json();
@@ -153,6 +154,7 @@ export default function DrawingGame() {
           id: `${Date.now()}-${randomNumber(1000, 9999)}`,
           guess: result.guess,
           reasoning: result.reasoning,
+          description: description.trim(),
           createdAt: new Date().toISOString()
         },
         ...items
@@ -188,6 +190,18 @@ export default function DrawingGame() {
             </label>
           </div>
           <div className="tool-row">
+            <label className="tool-chip description-field">
+              补充说明
+              <textarea
+                aria-label="对图形的补充说明"
+                placeholder="可输入类别、场景提示，不可涉及要画的对象名称"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={2}
+              />
+            </label>
+          </div>
+          <div className="tool-row">
             <button className="ghost-button" type="button" onClick={clearCanvas}>
               清空
             </button>
@@ -197,7 +211,7 @@ export default function DrawingGame() {
               onClick={submitGuess}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Gemini 猜测中..." : "让 AI 猜"}
+              {isSubmitting ? "AI 猜测中..." : "让 AI 猜"}
             </button>
           </div>
         </div>
@@ -232,11 +246,7 @@ export default function DrawingGame() {
             </div>
             <div className="meta-item">
               <span className="muted">识别模型</span>
-              <strong>Gemini REST API</strong>
-            </div>
-            <div className="meta-item">
-              <span className="muted">调用位置</span>
-              <strong>Next.js 后台</strong>
+              <strong>AI REST API</strong>
             </div>
           </div>
         </div>
@@ -250,6 +260,9 @@ export default function DrawingGame() {
               history.map((item) => (
                 <div key={item.id} className="history-item">
                   <strong>{item.guess}</strong>
+                  {item.description ? (
+                    <div className="muted">说明: {item.description}</div>
+                  ) : null}
                   <div className="muted">{item.reasoning}</div>
                   <div className="muted">{formatTime(item.createdAt)}</div>
                 </div>
