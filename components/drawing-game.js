@@ -377,10 +377,6 @@ export default function DrawingGame() {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              style={{
-                maxWidth: "100%",
-                maxHeight: "100%",
-              }}
             />
           </div>
           <div
